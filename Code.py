@@ -1,101 +1,204 @@
+# Importing Libraries
+import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
+import os
 
-# Load dataset
-df = pd.read_csv("KAG_conversion_data.csv")
+# Checking available files in Kaggle input
+for dirname, _, filenames in os.walk('/kaggle/input'):
+    for filename in filenames:
+        print(os.path.join(dirname, filename))
 
-# =====================
-# BASIC EXPLORATION
-# =====================
-print("\n--- Head ---")
-print(df.head())
-print("\n--- Info ---")
-print(df.info())
-print("\n--- Describe ---")
-print(df.describe())
-print("\n--- Missing Values ---")
-print(df.isnull().sum())
+# Loading Dataset
+df = pd.read_csv("/kaggle/input/clicks-conversion-tracking/KAG_conversion_data.csv")
+df.head()
 
-# =====================
-# FEATURE ENGINEERING
-# =====================
-df["ConversionRate"] = df["Approved_Conversion"] / df["Impressions"]
-df["CTR"] = df["Clicks"] / df["Impressions"]
-df["CPC"] = df["Spent"] / (df["Clicks"].replace(0, 1))  # Cost per click
-df["CPA"] = df["Spent"] / (df["Approved_Conversion"].replace(0, 1))  # Cost per acquisition
+# Checking Dataset Information
+df.info()
 
-# =====================
-# CORRELATION ANALYSIS
-# =====================
-plt.figure(figsize=(8, 6))
-sns.heatmap(
-    df[["Impressions","Clicks","Spent","Total_Conversion","Approved_Conversion","CTR","ConversionRate","CPC","CPA"]].corr(),
-    annot=True, fmt=".2f", cmap="coolwarm"
-)
-plt.title("Correlation Heatmap of Campaign Metrics")
+# Checking Dataset Shape
+df.shape
+
+# Statistical Summary of Dataset
+df.describe()
+
+# Correlation Heatmap
+g = sns.heatmap(df[["Impressions","Clicks","Spent","Total_Conversion","Approved_Conversion"]].corr(),
+                annot=True, fmt=".2f", cmap="coolwarm")
+
+# Unique Campaign IDs
+df["xyz_campaign_id"].unique()
+
+# Replacing Campaign IDs with Names
+df["xyz_campaign_id"].replace({916:"campaign_a",936:"campaign_b",1178:"campaign_c"}, inplace=True)
+df.head()
+
+# Countplot of Campaigns
+sns.countplot(x='xyz_campaign_id', data=df)
 plt.show()
 
-# =====================
-# DISTRIBUTIONS
-# =====================
-for col in ["CTR", "ConversionRate", "CPC", "CPA"]:
-    plt.figure(figsize=(6, 4))
-    sns.histplot(df[col].dropna(), bins=30, kde=True)
-    plt.title(f"Distribution of {col}")
-    plt.xlabel(col)
-    plt.ylabel("Frequency")
-    plt.show()
-
-# =====================
-# RELATIONSHIPS
-# =====================
-plt.figure(figsize=(6, 4))
-sns.scatterplot(x="Impressions", y="Clicks", data=df, alpha=0.6)
-plt.title("Impressions vs Clicks")
+# Barplot: Campaign vs Approved Conversion
+plt.bar(df["xyz_campaign_id"], df["Approved_Conversion"])
+plt.ylabel("Approved_Conversion")
+plt.title("company vs Approved_Conversion")
 plt.show()
 
-plt.figure(figsize=(6, 4))
-sns.scatterplot(x="Spent", y="Approved_Conversion", data=df, alpha=0.6)
-plt.title("Spent vs Approved Conversions")
+# Countplot: Age Distribution
+sns.countplot(x='age', data=df)
 plt.show()
 
-plt.figure(figsize=(6, 4))
-sns.scatterplot(x="Spent", y="CTR", data=df, alpha=0.6)
-plt.title("Spend vs CTR")
+# Barplot: Campaign vs Approved Conversion by Age
+sns.set(style="whitegrid")
+tips = sns.load_dataset("tips")
+sns.barplot(x=df["xyz_campaign_id"], y=df["Approved_Conversion"], hue=df["age"], data=tips)
+
+# Countplot: Gender Distribution
+sns.countplot(x='gender', data=df)
 plt.show()
 
-plt.figure(figsize=(6, 4))
-sns.scatterplot(x="Spent", y="ConversionRate", data=df, alpha=0.6)
-plt.title("Spend vs Conversion Rate")
+# Barplot: Campaign vs Approved Conversion by Gender
+sns.set(style="whitegrid")
+tips = sns.load_dataset("tips")
+sns.barplot(x=df["xyz_campaign_id"], y=df["Approved_Conversion"], hue=df["gender"], data=tips)
+
+# Countplot: Interest Distribution
+fig_dims = (15,6)
+fig, ax = plt.subplots(figsize=fig_dims)
+sns.countplot(x='interest', data=df)
 plt.show()
 
-# =====================
-# CAMPAIGN COMPARISON
-# =====================
-if "campaign" in df.columns:
-    campaign_summary = df.groupby("campaign")[["CTR","ConversionRate","CPC","CPA"]].mean().reset_index()
-    print("\n--- Campaign Summary ---")
-    print(campaign_summary)
+# Scatterplot: Interest vs Approved Conversion
+plt.scatter(df["interest"], df["Approved_Conversion"])
+plt.title("interest vs. Approved_Conversion")
+plt.xlabel("interest")
+plt.ylabel("Approved_Conversion")
+plt.show()
 
-    for metric in ["CTR", "ConversionRate", "CPC", "CPA"]:
-        plt.figure(figsize=(6, 4))
-        sns.barplot(x="campaign", y=metric, data=campaign_summary)
-        plt.title(f"{metric} by Campaign")
-        plt.show()
+# FacetGrid: Interest vs Approved Conversion by Gender
+g = sns.FacetGrid(df, col="gender")
+g.map(plt.scatter, "interest", "Approved_Conversion", alpha=.4)
+g.add_legend()
 
-# =====================
-# TIME-SERIES ANALYSIS
-# =====================
-if "date" in df.columns:
-    df["date"] = pd.to_datetime(df["date"])
-    daily = df.groupby("date")[["Impressions","Clicks","Spent","Approved_Conversion","CTR","ConversionRate"]].mean().reset_index()
+# FacetGrid: Interest vs Approved Conversion by Age
+g = sns.FacetGrid(df, col="age")
+g.map(plt.scatter, "interest", "Approved_Conversion", alpha=.4)
+g.add_legend()
 
-    for metric in ["Impressions", "Clicks", "Spent", "Approved_Conversion", "CTR", "ConversionRate"]:
-        plt.figure(figsize=(8, 4))
-        sns.lineplot(x="date", y=metric, data=daily)
-        plt.title(f"Daily Trend of {metric}")
-        plt.xlabel("Date")
-        plt.ylabel(metric)
-        plt.show()
+# Histogram: Spent
+plt.hist(df['Spent'], bins=25)
+plt.xlabel("Spent")
+plt.ylabel("Frequency")
+plt.show()
 
+# Scatterplot: Spent vs Approved Conversion
+plt.scatter(df["Spent"], df["Approved_Conversion"])
+plt.title("Spent vs. Approved_Conversion")
+plt.xlabel("Spent")
+plt.ylabel("Approved_Conversion")
+plt.show()
+
+# FacetGrid: Spent vs Approved Conversion by Gender
+g = sns.FacetGrid(df, col="gender")
+g.map(plt.scatter, "Spent", "Approved_Conversion", alpha=.4)
+g.add_legend()
+
+# FacetGrid: Spent vs Approved Conversion by Age
+g = sns.FacetGrid(df, col="age")
+g.map(plt.scatter, "Spent", "Approved_Conversion", alpha=.4)
+g.add_legend()
+
+# Histogram: Impressions
+plt.hist(df['Impressions'], bins=25)
+plt.xlabel("Impressions")
+plt.ylabel("Frequency")
+plt.show()
+
+# Scatterplot: Impressions vs Approved Conversion
+plt.scatter(df["Impressions"], df["Approved_Conversion"])
+plt.title("Impressions vs. Approved_Conversion")
+plt.xlabel("Impressions")
+plt.ylabel("Approved_Conversion")
+plt.show()
+
+# FacetGrid: Clicks vs Approved Conversion by Gender
+g = sns.FacetGrid(df, col="gender")
+g.map(plt.scatter, "Clicks", "Approved_Conversion", alpha=.4)
+g.add_legend()
+
+# FacetGrid: Clicks vs Approved Conversion by Age
+g = sns.FacetGrid(df, col="age")
+g.map(plt.scatter, "Clicks", "Approved_Conversion", alpha=.4)
+g.add_legend()
+
+# FacetGrid: Total Conversion vs Approved Conversion by Gender
+g = sns.FacetGrid(df, col="gender")
+g.map(plt.scatter, "Total_Conversion", "Approved_Conversion", alpha=.4)
+g.add_legend()
+
+# FacetGrid: Total Conversion vs Approved Conversion by Age
+g = sns.FacetGrid(df, col="age")
+g.map(plt.scatter, "Total_Conversion", "Approved_Conversion", alpha=.5)
+g.add_legend()
+
+# Filtering Campaign C
+a, b, c = [], [], []
+for i, j, k in zip(df.xyz_campaign_id, df.fb_campaign_id, df.Approved_Conversion):
+    if i == "campaign_c":
+        a.append(i)
+        b.append(j)
+        c.append(k)
+d = {'campaign_name': a, 'fb_campaign_id': b, 'Approved_Conversion': c}     
+campaign_c = pd.DataFrame(d)
+campaign_c.head()
+
+# Scatterplot: fb_campaign_id vs Approved Conversion for Campaign C
+plt.figure(figsize=(20,5))
+plt.scatter(campaign_c["fb_campaign_id"], campaign_c["Approved_Conversion"])
+plt.title("fb_campaign_id vs. Approved_Conversion for campaign_c")
+plt.xlabel("fb_campaign_id")
+plt.ylabel("Approved_Conversion")
+plt.show()
+
+# Replacing Campaign Names with Original IDs for Modelling
+df["xyz_campaign_id"].replace({"campaign_a":916 ,"campaign_b":936 ,"campaign_c":1178}, inplace=True)
+
+# Encoding Categorical Variables
+from sklearn.preprocessing import LabelEncoder
+encoder = LabelEncoder()
+encoder.fit(df["gender"])
+df["gender"] = encoder.transform(df["gender"])
+encoder.fit(df["age"])
+df["age"] = encoder.transform(df["age"])
+df.head()
+
+# Splitting Features and Target
+x = np.array(df.drop(labels=["Approved_Conversion","Total_Conversion"], axis=1))
+y = np.array(df["Total_Conversion"]).reshape(len(df), 1)
+
+# Feature Scaling
+from sklearn.preprocessing import StandardScaler
+sc_x = StandardScaler()
+x = sc_x.fit_transform(x)
+
+# Splitting Dataset into Train and Test Sets
+from sklearn.model_selection import train_test_split
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.2, random_state=42)
+
+# Training Random Forest Regressor
+from sklearn.ensemble import RandomForestRegressor
+rfr = RandomForestRegressor(n_estimators=10, random_state=0)
+rfr.fit(x_train, y_train)
+
+# Predicting on Test Set
+y_pred = rfr.predict(x_test)
+y_pred = np.round(y_pred)
+
+# Model Evaluation
+from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
+mae = mean_absolute_error(y_test, y_pred)
+mse = mean_squared_error(y_test, y_pred)
+rmse = np.sqrt(mse)
+r2 = r2_score(y_test, y_pred)
+mae
+r2
