@@ -1,7 +1,34 @@
-## Social-Media-Campaign-Performance-Analysis
+<h1 align="center">Social Media Campaign Performance Analysis </h1>
 
-## Project Overview
-This project analyzes a campaign clicks and conversions dataset to understand user behavior, campaign performance, and factors affecting conversions. The goal is to generate insights using visualizations and build a predictive model for total conversions.
+<p align="center">
+  <img src="https://img.shields.io/badge/Python-3.8+-blue?logo=python" />
+  <img src="https://img.shields.io/badge/Scikit--Learn-ML-orange?logo=scikit-learn" />
+  <img src="https://img.shields.io/badge/Status-Completed-brightgreen" />
+</p>
+
+---
+
+## Project Overview  
+This project analyzes **social media ad campaigns** to optimize **sales conversion** and predict **total conversions**.  
+It is built in **Python** and uses a **Random Forest Regressor** to forecast conversions based on ad performance metrics and user demographics.  
+
+## Features  
+- Uses a **social media ad campaign dataset** with 11 features  
+- Performs **data preprocessing**, **EDA**, and correlation analysis  
+- Visualizes **campaign performance**, **age & gender distribution**, and **interest impact**  
+- Encodes categorical variables for **machine learning modeling**  
+- Trains a **Random Forest Regressor** to predict `Total_Conversion`  
+- Evaluates model using **MAE, RMSE, and R² Score**  
+- Provides insights for **campaign optimization** and **target audience selection**  
+
+---
+
+## Tech Stack  
+- Python  
+- NumPy  
+- Pandas  
+- Matplotlib & Seaborn  
+- scikit-learn (sklearn)  
 
 ## Dataset
 - **Source:** Kaggle (`KAG_conversion_data.csv`)
@@ -43,9 +70,3 @@ This project analyzes a campaign clicks and conversions dataset to understand us
 ## Results
 - The model predicts total conversions based on campaign and user data.  
 - Visualizations provide insights into which campaigns, demographics, and interests drive approved conversions.  
-
-## Usage
-1. Clone the repository.  
-2. Install required libraries:  
-```bash
-pip install pandas numpy matplotlib seaborn scikit-learn
